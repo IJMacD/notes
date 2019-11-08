@@ -1,0 +1,91 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <meta http-equiv="X-UA-Compatible" content="ie=edge">
+    <title>Touch Test</title>
+    <style>
+        body {
+            margin: 0;
+            overflow: hidden;
+            background: palegoldenrod;
+        }
+        #target {
+            touch-action: none;
+        }
+        #palette {
+            position: fixed;
+            bottom: 0;
+            width: 100%;
+            text-align: center;
+            padding: 5px;
+        }
+        #palette button {
+            margin: 4px;
+        }
+    </style>
+</head>
+<body>
+    <canvas id="target"></canvas>
+    <div id="palette"></div>
+    <script>
+        /** @type {HTMLCanvasElement} */
+        const target = document.getElementById('target');
+
+        target.width = window.innerWidth;
+        target.height = window.innerHeight;
+
+        const ctx = target.getContext("2d");
+        ctx.lineCap = "round";
+
+        const palette = document.getElementById("palette");
+
+        const colours = ["black","red","green","blue","yellow","cyan","magenta","white"];
+        let colour = colours[0];
+
+        for (const c of colours) {
+            const btn = document.createElement("button");
+            btn.style.background = c;
+            btn.style.border = "0";
+            btn.style.width = "40px";
+            btn.style.height = "40px";
+            btn.style.borderRadius = "50%";
+            btn.addEventListener("click", () => colour = c);
+            palette.append(btn);
+        }
+
+        let prevPoint;
+
+        target.addEventListener("pointermove", ev => {
+            const { x, y, pointerType, pressure, button, buttons, movementX: dx, movementY: dy } = ev;
+
+            if (pointerType === "pen") {
+                if (buttons & 32) {
+                    ctx.beginPath();
+                    const speed = Math.sqrt(dx * dx + dy * dy);
+                    ctx.moveTo(prevPoint.x, prevPoint.y);
+                    ctx.lineTo(x, y);
+                    ctx.lineWidth = speed;
+                    ctx.strokeStyle = "#000000";
+                    ctx.globalCompositeOperation = "destination-out";
+                    ctx.stroke();
+                    ctx.globalCompositeOperation = "source-over";
+                }
+                else if (buttons > 0 && prevPoint) {
+                    ctx.beginPath();
+                    ctx.moveTo(prevPoint.x, prevPoint.y);
+                    ctx.lineTo(x, y);
+                    ctx.lineWidth = pressure * pressure * 50;
+                    ctx.strokeStyle = colour;
+                    ctx.stroke();
+                }
+
+                prevPoint = { x, y };
+            }
+        });
+
+        target.addEventListener("pointercancel", () => prevPoint = null);
+    </script>
+</body>
+</html>
