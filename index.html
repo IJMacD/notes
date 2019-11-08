@@ -4,7 +4,7 @@
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
     <meta http-equiv="X-UA-Compatible" content="ie=edge">
-    <title>Touch Test</title>
+    <title>Notes</title>
     <style>
         body {
             margin: 0;
@@ -30,13 +30,28 @@
     <canvas id="target"></canvas>
     <div id="palette"></div>
     <script>
+        const SAVED_CANVAS = "NOTES_SAVED_CANVAS";
         /** @type {HTMLCanvasElement} */
-        const target = document.getElementById('target');
+        const canvas = document.getElementById('target');
 
-        target.width = window.innerWidth;
-        target.height = window.innerHeight;
+        canvas.width = Math.max(2000, window.innerWidth);
+        canvas.height = Math.max(2000, window.innerHeight);
 
-        const ctx = target.getContext("2d");
+        const ctx = canvas.getContext("2d");
+
+        const savedData = localStorage.getItem(SAVED_CANVAS);
+        if (savedData) {
+            var img = new Image();
+            img.onload = function() {
+                minWidth = Math.max(img.width, canvas.width);
+                minHeight = Math.max(img.height, canvas.height);
+                ctx.drawImage(img, 0, 0);
+            };
+
+            img.src = savedData;
+        }
+
+
         ctx.lineCap = "round";
 
         const palette = document.getElementById("palette");
@@ -57,7 +72,7 @@
 
         let prevPoint;
 
-        target.addEventListener("pointermove", ev => {
+        canvas.addEventListener("pointermove", ev => {
             const { x, y, pointerType, pressure, button, buttons, movementX: dx, movementY: dy } = ev;
 
             if (pointerType === "pen") {
@@ -85,7 +100,10 @@
             }
         });
 
-        target.addEventListener("pointercancel", () => prevPoint = null);
+        canvas.addEventListener("pointerout", () => {
+            prevPoint = null;
+            localStorage.setItem(SAVED_CANVAS, canvas.toDataURL());
+        });
     </script>
 </body>
 </html>
